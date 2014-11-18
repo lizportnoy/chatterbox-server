@@ -12,7 +12,7 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 var url = require("url");
-var results = [{username: 'anonymous', roomname: 'lobby'}];
+var results = [{username: 'anonymous', roomname: 'lobby', objectId: 0, text: 'herro'}];
 var messageIdCounter = 0;
 
 var defaultCorsHeaders = {
@@ -59,7 +59,7 @@ var postMessage = function (request, response) {
   request.on('end', function () {
     response.writeHead(201, headers);
     var newMessage = JSON.parse(requestBody);
-    newMessage.messageId = messageIdCounter;
+    newMessage.objectId = messageIdCounter;
     messageIdCounter++;
     newMessage.createdAt = Date.now();
     results.push(newMessage);
