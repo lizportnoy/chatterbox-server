@@ -17,22 +17,13 @@ var headers = defaultCorsHeaders;
 
 exports.requestHandler = function(request, response) {
 
-  var uri = url.parse(request.url).path;
+  var uri = url.parse(request.url).path.substring(0,9);
 
   // Messages
-  if ('/classes/messages' === uri || '/classes/room1' === uri) {
+  if ('/classes/' === uri) {
     switch (request.method) {
       case 'GET':
-        switch(request.url) {
-          // case '/':
-          //   getMessage(request, response);
-          //   break;
-          case '/classes/messages':
-            getMessage(request, response);
-            break;
-          case '/classes/room1':
-            getMessage(request, response);
-        }
+        getMessage(request, response);
         break;
 
       case 'POST':
