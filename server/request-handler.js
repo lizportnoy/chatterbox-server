@@ -11,59 +11,70 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var url = require("url");
+var results = [];
+var headers = defaultCorsHeaders;
 
-var requestHandler = function(request, response) {
-  // Request and Response come from node's http module.
-  //
-  // They include information about both the incoming request, such as
-  // headers and URL, and about the outgoing response, such as its status
-  // and content.
-  //
-  // Documentation for both request and response can be found in the HTTP section at
-  // http://nodejs.org/documentation/api/
+exports.requestHandler = function(request, response) {
 
-  // Do some basic logging.
-  //
-  // Adding more logging to your server can be an easy way to get passive
-  // debugging help, but you should always be careful about leaving stray
-  // console.logs in your code.
-  console.log("Serving request type " + request.method + " for url " + request.url);
+  var uri = url.parse(request.url).path;
 
-  // The outgoing status.
-  var statusCode = 200;
+  // Messages
+  if ('/classes/messages' === uri || '/classes/room1' === uri) {
+    switch (request.method) {
+      case 'GET':
+        switch(request.url) {
+          // case '/':
+          //   getMessage(request, response);
+          //   break;
+          case '/classes/messages':
+            getMessage(request, response);
+            break;
+          case '/classes/room1':
+            getMessage(request, response);
+        }
+        break;
 
-  // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
+      case 'POST':
+        postMessage(request, response);
+        break;
 
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "text/plain";
-
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
-
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  response.end("Hello, World!");
+      default:
+        badRequest(response);
+    }
+  } else {
+    notFound(response);
+  }
 };
 
-// These headers will allow Cross-Origin Resource Sharing (CORS).
-// This code allows this server to talk to websites that
-// are on different domains, for instance, your chat client.
-//
-// Your chat client is running from a url like file://your/chat/client/index.html,
-// which is considered a different domain.
-//
-// Another way to get around this restriction is to serve you chat
-// client from this domain by setting up static file serving.
+var postMessage = function (request, response) {
+  var requestBody = "";
+  request.on('data', function (data) {
+    requestBody += data;
+  });
+
+  request.on('end', function () {
+    response.writeHead(201, {'Content-Type': headers});
+    results.push(JSON.parse(requestBody));
+    response.end(JSON.stringify({'results': results}));
+  });
+};
+
+var getMessage = function (request, response) {
+  response.writeHead(200, {'Content-Type': headers});
+  response.end(JSON.stringify({'results': results}));
+};
+
+var badRequest = function (response) {
+  response.writeHead(404, {'Content-Type': headers});
+  response.end('Default in Switch Statement');
+};
+
+var notFound = function(response) {
+  response.writeHead(404, {'Content-Type': headers});
+  response.end('Not Found');
+};
+
 var defaultCorsHeaders = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
